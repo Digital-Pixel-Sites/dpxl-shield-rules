@@ -1,0 +1,158 @@
+{
+    "meta": {
+        "note": "Source rules for the DPXL Shield WAF feed. The build tool copies this to dist/waf-rules.json and stamps meta.version. Rules are ADDITIVE and block-only \u2014 the plugin's built-in rules remain the immutable floor. Keep patterns high-signal / low false-positive.",
+        "version": "2026.07.27"
+    },
+    "rules": [
+        {
+            "id": "feed-log4shell-1",
+            "name": "Log4Shell JNDI lookup (CVE-2021-44228)",
+            "priority": 25,
+            "enabled": true,
+            "targets": [
+                "get",
+                "post",
+                "cookie",
+                "user_agent",
+                "referer",
+                "uri"
+            ],
+            "pattern": "/\\$\\{jndi:(?:ldap|ldaps|rmi|dns|iiop|nis|corba):/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "critical",
+            "tags": [
+                "rce",
+                "log4shell",
+                "cve-2021-44228"
+            ]
+        },
+        {
+            "id": "feed-php-wrapper-1",
+            "name": "PHP stream wrapper abuse (filter/input/data)",
+            "priority": 26,
+            "enabled": true,
+            "targets": [
+                "get",
+                "post",
+                "uri"
+            ],
+            "pattern": "/php:\\/\\/(?:filter|input|data)/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "high",
+            "tags": [
+                "lfi",
+                "rce",
+                "php-wrapper"
+            ]
+        },
+        {
+            "id": "feed-scanner-ua-1",
+            "name": "Known offensive security scanner user-agent",
+            "priority": 27,
+            "enabled": true,
+            "targets": [
+                "user_agent"
+            ],
+            "pattern": "/\\b(?:sqlmap|nikto|nessus|masscan|wpscan|acunetix|fimap|dirbuster|nuclei|zgrab|zmeu)\\b/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "medium",
+            "tags": [
+                "scanner",
+                "recon"
+            ]
+        },
+        {
+            "id": "feed-vcs-exposure-1",
+            "name": "Version-control directory probe (.git/.svn/.hg)",
+            "priority": 28,
+            "enabled": true,
+            "targets": [
+                "uri"
+            ],
+            "pattern": "/\\/\\.(?:git|svn|hg)\\//i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "medium",
+            "tags": [
+                "exposure",
+                "recon"
+            ]
+        },
+        {
+            "id": "feed-encoded-traversal-1",
+            "name": "URL-encoded path traversal",
+            "priority": 29,
+            "enabled": true,
+            "targets": [
+                "uri",
+                "query"
+            ],
+            "pattern": "/(?:%2e%2e(?:%2f|%5c)|\\.\\.%2f|%2e%2e\\/)/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "high",
+            "tags": [
+                "lfi",
+                "traversal"
+            ]
+        },
+        {
+            "id": "feed-nullbyte-1",
+            "name": "Null-byte injection",
+            "priority": 30,
+            "enabled": true,
+            "targets": [
+                "get",
+                "post",
+                "uri"
+            ],
+            "pattern": "/%00/",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "high",
+            "tags": [
+                "nullbyte",
+                "lfi"
+            ]
+        },
+        {
+            "id": "feed-proc-environ-1",
+            "name": "Access to /proc/self/environ",
+            "priority": 31,
+            "enabled": true,
+            "targets": [
+                "get",
+                "post",
+                "uri"
+            ],
+            "pattern": "/\\/proc\\/self\\/environ/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "high",
+            "tags": [
+                "lfi",
+                "recon"
+            ]
+        },
+        {
+            "id": "feed-data-uri-html-1",
+            "name": "Base64 data: URI carrying HTML (XSS vector)",
+            "priority": 32,
+            "enabled": true,
+            "targets": [
+                "get",
+                "post"
+            ],
+            "pattern": "/data:text\\/html[^,]*;base64,/i",
+            "pattern_type": "regex",
+            "action": "block",
+            "severity": "medium",
+            "tags": [
+                "xss"
+            ]
+        }
+    ]
+}
