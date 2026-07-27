@@ -1,0 +1,7 @@
+# NUNCA versionar a chave privada de assinatura do feed.
+*.key
+*.pem
+private/
+signing-key*
+.env
+.DS_Store
