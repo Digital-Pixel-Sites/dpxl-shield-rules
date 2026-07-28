@@ -20,7 +20,7 @@ declare(strict_types=1);
  *       [--artifact-base=https://cdn.jsdelivr.net/gh/Digital-Pixel-Sites/dpxl-shield-rules@main/dist]
  */
 
-$opts = getopt('', ['version:', 'min-plugin::', 'artifact-base::']);
+$opts = getopt('', ['version:', 'min-plugin::', 'artifact-base::', 'geo-gz::', 'geo-url::', 'geo-version::']);
 
 $version    = $opts['version'] ?? '';
 $minPlugin  = $opts['min-plugin'] ?? '1.0.0';
@@ -92,6 +92,29 @@ $manifest = [
     ],
 ];
 
+// Optional GeoLite2 database artifact. The gzipped .mmdb is a large binary hosted
+// as a GitHub Release asset (not in the repo); the manifest only pins its URL +
+// SHA-256. Signing the manifest transitively authenticates it.
+$geoGz  = $opts['geo-gz']  ?? '';
+$geoUrl = $opts['geo-url'] ?? '';
+
+if ($geoGz !== '' && $geoUrl !== '') {
+    if (!is_readable($geoGz)) {
+        fwrite(STDERR, "ERROR: --geo-gz file not readable: {$geoGz}\n");
+        exit(2);
+    }
+
+    $geoBytes = (string) file_get_contents($geoGz);
+    $manifest['artifacts']['geo_db'] = [
+        'url'        => $geoUrl,
+        'sha256'     => hash('sha256', $geoBytes),
+        'size'       => strlen($geoBytes),
+        'db_version' => (string) ($opts['geo-version'] ?? ''),
+    ];
+
+    echo "  geo_db:    " . strlen($geoBytes) . " bytes, sha256=" . hash('sha256', $geoBytes) . "\n";
+}
+
 $manifest['signature'] = base64_encode(
     sodium_crypto_sign_detached(signedPayload($manifest), $secret)
 );
@@ -119,7 +142,7 @@ function signedPayload(array $manifest): string {
         'min_plugin_version=' . (string) ($manifest['min_plugin_version'] ?? ''),
     ];
 
-    foreach (['waf_rules', 'signatures'] as $name) {
+    foreach (['waf_rules', 'signatures', 'geo_db'] as $name) {
         $artifact = $manifest['artifacts'][$name] ?? null;
 
         if (is_array($artifact)) {

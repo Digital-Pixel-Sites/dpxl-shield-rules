@@ -67,5 +67,10 @@ Rule and signature content is curated and adapted from open sources, including:
 - [OWASP Core Rule Set](https://coreruleset.org/) — Apache-2.0
 - [php-malware-finder](https://github.com/nbs-system/php-malware-finder) — GPL
 
+The GeoLite2 Country database distributed via this feed's releases includes
+GeoLite2 data created by MaxMind, available from
+[https://www.maxmind.com](https://www.maxmind.com), used under the GeoLite2 End
+User License Agreement.
+
 Trademarks and product names belong to their respective owners. "Wordfence" is a trademark of
 Defiant, Inc.; it is referenced only for comparison and this project is not affiliated with it.
