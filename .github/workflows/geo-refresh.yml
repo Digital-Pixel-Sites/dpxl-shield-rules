@@ -1,0 +1,86 @@
+name: Weekly GeoLite2 refresh
+
+# Keeps the GeoLite2 Country database fresh for every DPXL Shield install: pulls
+# the latest from MaxMind, publishes it as a release asset, and re-signs the feed
+# manifest so the plugin picks it up automatically. Runs weekly (well within
+# MaxMind's 30-day freshness requirement) and can be triggered manually.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geo-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: sodium
+          coverage: none
+
+      - name: Download latest GeoLite2 Country from MaxMind
+        env:
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" -o geo.tar.gz
+          tar xzf geo.tar.gz
+          MMDB="$(find . -name 'GeoLite2-Country.mmdb' | head -1)"
+          test -n "$MMDB"
+          gzip -9 -c "$MMDB" > GeoLite2-Country.mmdb.gz
+          echo "DB_DATE=$(date -u +%Y-%m-%d)"      >> "$GITHUB_ENV"
+          echo "FEED_VERSION=$(date -u +%Y.%m.%d)"  >> "$GITHUB_ENV"
+
+      - name: Publish GeoLite2 release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="geodb-${DB_DATE}"
+          gh release create "$TAG" GeoLite2-Country.mmdb.gz \
+            --title "GeoLite2 Country DB (${DB_DATE})" \
+            --notes "This product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com." \
+            || gh release upload "$TAG" GeoLite2-Country.mmdb.gz --clobber
+          echo "GEO_URL=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/GeoLite2-Country.mmdb.gz" >> "$GITHUB_ENV"
+
+      - name: Rebuild + sign manifest
+        env:
+          DPXL_FEED_SIGNING_KEY: ${{ secrets.DPXL_FEED_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          php tools/build-feed.php --version="${FEED_VERSION}" --min-plugin=1.0.0 \
+            --geo-gz=GeoLite2-Country.mmdb.gz \
+            --geo-url="${GEO_URL}" \
+            --geo-version="${DB_DATE}"
+
+      - name: Commit, push and tag the manifest
+        run: |
+          set -euo pipefail
+          rm -rf geo.tar.gz GeoLite2-Country.mmdb.gz GeoLite2-Country_*
+          if git diff --quiet -- dist/; then
+            echo "Manifest unchanged (MaxMind DB not newer) — nothing to publish."
+            exit 0
+          fi
+          git config user.name  "dpxl-feed-bot"
+          git config user.email "dev@digitalpixel.com.br"
+          git add dist/
+          git commit -m "Weekly GeoLite2 refresh ${FEED_VERSION} (db ${DB_DATE})"
+          git push origin HEAD:main
+          git tag "${FEED_VERSION}" || true
+          git push origin "${FEED_VERSION}" || true
+
+      - name: Purge jsDelivr cache
+        run: |
+          curl -s "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@main/dist/manifest.json"  -o /dev/null || true
+          curl -s "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@main/dist/waf-rules.json" -o /dev/null || true
