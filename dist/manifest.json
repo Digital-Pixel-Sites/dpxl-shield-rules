@@ -1,21 +1,21 @@
 {
     "schema": 1,
-    "feed_version": "2026.08.24",
-    "generated_at": "2026-08-24T07:18:04+00:00",
+    "feed_version": "2026.08.31",
+    "generated_at": "2026-08-31T13:42:08+00:00",
     "min_plugin_version": "1.0.0",
     "artifacts": {
         "waf_rules": {
             "url": "https://cdn.jsdelivr.net/gh/Digital-Pixel-Sites/dpxl-shield-rules@main/dist/waf-rules.json",
-            "sha256": "44751521227cf5b0811b442c33e84c6f25f13c7a05069a01564eca705646bed1",
+            "sha256": "501693277c93a18c420264a97315488922ee78eae4b3fd62661d6f2c755f853a",
             "size": 4668,
             "rules_count": 8
         },
         "geo_db": {
-            "url": "https://github.com/Digital-Pixel-Sites/dpxl-shield-rules/releases/download/geodb-2026-08-24/GeoLite2-Country.mmdb.gz",
-            "sha256": "dc23da1ea33771681221f1e03259476c49837d3318056af2e3e8a4722aca2b6b",
-            "size": 4417263,
-            "db_version": "2026-08-24"
+            "url": "https://github.com/Digital-Pixel-Sites/dpxl-shield-rules/releases/download/geodb-2026-08-31/GeoLite2-Country.mmdb.gz",
+            "sha256": "fd75fbfec99572c4fd1eb3f42363fca0b4aba209d6d9449f4c7639e87a4a20f6",
+            "size": 4418148,
+            "db_version": "2026-08-31"
         }
     },
-    "signature": "u0gxQFbl0VqgyilYt9XOyakrSoXjW6sxXeUNtW6aRE6g+4/irr0JEW++D8Pst4Sy3byCMKy4C47Xw44em9UFCw=="
+    "signature": "C2FSnZNYhribI66jSyfBGJmgM3H2+mVlYyQonV9lRpdvP2IAqzSe/A6ckxwHls4nq/StcIIoyj6VFu46F8hQDw=="
 }
