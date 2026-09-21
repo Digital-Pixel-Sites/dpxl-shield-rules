@@ -1,7 +1,7 @@
 {
     "meta": {
         "note": "Source rules for the DPXL Shield WAF feed. The build tool copies this to dist/waf-rules.json and stamps meta.version. Rules are ADDITIVE and block-only \u2014 the plugin's built-in rules remain the immutable floor. Keep patterns high-signal / low false-positive.",
-        "version": "2026.09.14"
+        "version": "2026.09.21"
     },
     "rules": [
         {
